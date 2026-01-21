@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>位元欄位提取工具 (Bit Field Extractor)</title>
+    <title>位元欄位提取工具 (Mobile Optimized)</title>
     <style>
         :root {
             --bg-color: #f8f9fa;
@@ -14,35 +14,51 @@
             --code-bg: #202124;
             --highlight: #34a853;
         }
-        body { font-family: 'Consolas', 'Monaco', 'Microsoft JhengHei', monospace; background-color: var(--bg-color); padding: 20px; color: #333; }
-        .container { max-width: 1150px; margin: auto; background: var(--card-bg); padding: 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
-        h2 { color: var(--primary-color); border-bottom: 2px solid #eee; padding-bottom: 10px; margin: 0 0 20px 0; }
+        body { font-family: 'Consolas', 'Monaco', 'Microsoft JhengHei', monospace; background-color: var(--bg-color); padding: 15px; color: #333; margin: 0; }
+        .container { max-width: 100%; margin: auto; background: var(--card-bg); padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        h2 { color: var(--primary-color); border-bottom: 2px solid #eee; padding-bottom: 10px; margin: 0 0 15px 0; font-size: 1.2rem; }
         
-        .controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; background: #eef2f7; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        .controls { display: grid; grid-template-columns: 1fr; gap: 12px; background: #eef2f7; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
         .input-group { display: flex; flex-direction: column; gap: 5px; }
         label { font-weight: bold; font-size: 13px; color: #555; }
-        input, select { padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 15px; font-family: inherit; }
+        input, select { padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 15px; font-family: inherit; }
         
-        .section-title { font-weight: bold; color: var(--primary-color); margin: 20px 0 10px 0; display: flex; align-items: center; gap: 10px; }
-        .result-card { background: var(--card-bg); border: 1px solid #dfe1e5; border-radius: 8px; padding: 15px; margin-bottom: 10px; }
-        .val-row { margin-bottom: 8px; font-size: 15px; }
+        .section-title { font-weight: bold; color: var(--primary-color); margin: 20px 0 10px 0; display: flex; align-items: center; gap: 10px; font-size: 14px; }
+        .result-card { background: var(--card-bg); border: 1px solid #dfe1e5; border-radius: 8px; padding: 12px; margin-bottom: 10px; }
+        .val-row { margin-bottom: 8px; font-size: 14px; word-break: break-all; }
         .label-tag { background: #eee; padding: 2px 6px; border-radius: 4px; font-size: 11px; margin-right: 8px; color: #666; }
 
-        /* 二進位顯示核心樣式 */
-        .binary-row { display: flex; flex-direction: row; background: var(--code-bg); padding: 12px 8px; border-radius: 6px; overflow-x: auto; }
-        .bit-unit { display: flex; flex-direction: column; align-items: center; flex: 0 0 auto; min-width: 40px; padding: 0 8px; border-right: 1px solid #3c4043; }
-        .bit-unit:last-child { border-right: none; }
-        .hex-top { color: var(--hex-color); font-weight: bold; font-size: 14px; margin-bottom: 4px; min-height: 1.2em; }
-        .bin-bottom { color: var(--bin-color); font-size: 14px; letter-spacing: 2px; }
+        /* 關鍵修改：增加 flex-wrap 讓內容可以自動換行 */
+        .binary-row { 
+            display: flex; 
+            flex-direction: row; 
+            flex-wrap: wrap; /* 讓超出寬度的方格換行 */
+            background: var(--code-bg); 
+            padding: 10px 5px; 
+            border-radius: 6px; 
+            gap: 5px; /* 方格間距 */
+        }
+        .bit-unit { 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            background: #2d2e31; /* 為每個單元增加微弱背景色 */
+            padding: 5px;
+            border-radius: 4px;
+            min-width: 45px;
+            border-right: none; /* 手機版不使用右邊框區分 */
+        }
+        .hex-top { color: var(--hex-color); font-weight: bold; font-size: 14px; margin-bottom: 2px; }
+        .bin-bottom { color: var(--bin-color); font-size: 12px; letter-spacing: 1px; }
         
         .highlight-box { border: 2px solid var(--highlight); }
-        .range-info { font-size: 12px; color: var(--highlight); background: #e6f4ea; padding: 2px 8px; border-radius: 10px; }
+        .range-info { font-size: 11px; color: var(--highlight); background: #e6f4ea; padding: 2px 8px; border-radius: 10px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>位元運算與欄位提取工具</h2>
+    <h2>位元欄位提取工具</h2>
 
     <div class="controls">
         <div class="input-group">
@@ -63,30 +79,30 @@
                     <option value="L">左移 (<<)</option>
                     <option value="R">右移 (>>)</option>
                 </select>
-                <input type="number" id="shiftAmt" value="0" min="0" oninput="update()" style="width:60px;">
+                <input type="number" id="shiftAmt" value="0" min="0" oninput="update()" style="width:70px;">
             </div>
         </div>
         <div class="input-group">
             <label>提取範圍 (High ~ Low)</label>
             <div style="display: flex; align-items: center; gap: 5px;">
-                <input type="number" id="rangeHigh" value="15" oninput="update()" style="width:65px;">
+                <input type="number" id="rangeHigh" value="15" oninput="update()" style="flex:1;">
                 <span>~</span>
-                <input type="number" id="rangeLow" value="0" oninput="update()" style="width:65px;">
+                <input type="number" id="rangeLow" value="0" oninput="update()" style="flex:1;">
             </div>
         </div>
     </div>
 
     <div class="section-title">原始數值 (Original)</div>
-    <div class="result-card" id="originRes"></div>
+    <div id="originRes"></div>
 
     <div class="section-title">位移結果 (Shifted)</div>
-    <div class="result-card" id="shiftedRes"></div>
+    <div id="shiftedRes"></div>
 
     <div class="section-title">
         範圍提取 (Extracted) 
         <span id="rangeDisplay" class="range-info">Bit 15 ~ 0</span>
     </div>
-    <div class="result-card highlight-box" id="rangeRes"></div>
+    <div id="rangeRes"></div>
 </div>
 
 <script>
@@ -112,12 +128,10 @@
             if (!inputStr) return;
             let val = BigInt(inputStr) & MASK_FULL;
 
-            // 1. 原始與位移 (標準 4-bit 對齊)
             renderStandard(val, 'originRes', bitMode);
             let sVal = (shiftDir === 'L') ? (val << shiftAmt) : (val >> shiftAmt);
             renderStandard(sVal & MASK_FULL, 'shiftedRes', bitMode);
 
-            // 2. 提取範圍 (精確 bit 顯示)
             const h = Math.max(rHigh, rLow);
             const l = Math.min(rHigh, rLow);
             const len = h - l + 1;
@@ -129,61 +143,49 @@
         }
     }
 
-    // 標準顯示：湊滿 4 bits 一組
     function renderStandard(num, targetId, totalBits) {
         const hexSize = totalBits / 4;
         const hexStr = num.toString(16).padStart(hexSize, '0').toUpperCase();
         const binStr = num.toString(2).padStart(totalBits, '0');
         
-        let html = `<div class="binary-row">`;
+        let html = `<div class="result-card"><div class="val-row"><span class="label-tag">DEC</span><strong>${num.toString(10)}</strong></div>
+                    <div class="val-row"><span class="label-tag">HEX</span><strong>0x${hexStr}</strong></div>
+                    <div class="binary-row">`;
         for (let i = 0; i < hexSize; i++) {
             html += `<div class="bit-unit">
                         <div class="hex-top">${hexStr[i]}</div>
                         <div class="bin-bottom">${binStr.substr(i*4, 4)}</div>
                      </div>`;
         }
-        html += `</div>`;
-        
-        document.getElementById(targetId).innerHTML = `
-            <div class="val-row"><span class="label-tag">DEC</span><strong>${num.toString(10)}</strong></div>
-            <div class="val-row"><span class="label-tag">HEX</span><strong>0x${hexStr}</strong></div>
-            ${html}`;
+        html += `</div></div>`;
+        document.getElementById(targetId).innerHTML = html;
     }
 
-    // 提取顯示：提取幾個 bit 就顯幾個，但維持每 4 bit 分隔
     function renderExtracted(num, targetId, len) {
         const binStr = num.toString(2).padStart(len, '0');
         const hexStr = num.toString(16).toUpperCase();
         
-        let html = `<div class="binary-row">`;
-        // 從右側(LSB)開始計算，但為了 layout 要從左側開始渲染
-        // 我們先計算總共有幾組
+        let html = `<div class="result-card highlight-box"><div class="val-row"><span class="label-tag">DEC</span><strong>${num.toString(10)}</strong></div>
+                    <div class="val-row"><span class="label-tag">HEX</span><strong>0x${hexStr}</strong></div>
+                    <div class="binary-row">`;
+        
         const groups = [];
         for (let i = len; i > 0; i -= 4) {
             const currentLen = i < 4 ? i : 4;
             const chunk = binStr.substring(i - currentLen, i);
-            groups.unshift(chunk); // 放到陣列前方
+            groups.unshift(chunk);
         }
-
-        // 根據對應的 16 進位字元渲染 (需注意 16 進位是對應整個數值)
-        // 為了簡單化，我們直接計算每一組對應的 Hex
         const fullHexStr = num.toString(16).toUpperCase().padStart(groups.length, '0');
 
         groups.forEach((chunk, index) => {
-            // 只有完整 4 bits 或最後一組才顯示對應的 Hex 比較合理
-            // 這裡顯示該 chunk 所在的 16 進位位置
             const hexChar = fullHexStr[index]; 
             html += `<div class="bit-unit">
                         <div class="hex-top">${hexChar}</div>
                         <div class="bin-bottom">${chunk}</div>
                      </div>`;
         });
-        html += `</div>`;
-
-        document.getElementById(targetId).innerHTML = `
-            <div class="val-row"><span class="label-tag">DEC</span><strong>${num.toString(10)}</strong></div>
-            <div class="val-row"><span class="label-tag">HEX</span><strong>0x${hexStr}</strong></div>
-            ${html}`;
+        html += `</div></div>`;
+        document.getElementById(targetId).innerHTML = html;
     }
 
     window.onload = () => { adjustRangeLimit(); update(); };
