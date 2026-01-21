@@ -1,25 +1,38 @@
 name: Build Android APK
-on: [push] # 當你上傳代碼時自動開始編譯
+on: [push]
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4 # 升級到 v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4 # 升級到 v4
         with:
-          node-version: 18
-      - name: Install Dependencies
+          node-version: 20 # 使用更穩定的 Node 20
+
+      - name: Initialize Project
         run: |
-          npm install
-          npx cap init BitFieldTool com.example.bitfield --web-dir www
-          npm run build
+          npm init -y
+          npm install @capacitor/cli @capacitor/android
+          mkdir -p www
+          cp index.html www/
+          # 使用 --confirm 強制執行，避免互動式詢問卡住編譯
+          npx cap init BitFieldTool com.example.bitfield --web-dir www --confirm
           npx cap add android
-      - name: Build APK
+
+      - name: Set Execution Permission for Gradlew
+        run: chmod +x android/gradlew
+
+      - name: Build with Gradle
         run: |
-          cd android && ./gradlew assembleDebug
-      - name: Upload APK
-        uses: actions/upload-artifact@v3
+          cd android
+          ./gradlew assembleDebug
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4 # 核心修正：必須使用 v4
         with:
-          name: bit-field-tool-apk
+          name: BitField-Tool-APK
           path: android/app/build/outputs/apk/debug/app-debug.apk
+          overwrite: true # 確保重複編譯時會覆蓋舊檔
