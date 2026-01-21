@@ -5,21 +5,31 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4 # 升級到 v4
+      - uses: actions/checkout@v4
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4 # 升級到 v4
+        uses: actions/setup-node@v4
         with:
-          node-version: 20 # 使用更穩定的 Node 20
+          node-version: 20
 
-      - name: Initialize Project
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17' # Android 編譯必須要有 Java 環境
+
+      - name: Initialize and Build
         run: |
+          # 1. 建立基礎環境
           npm init -y
           npm install @capacitor/cli @capacitor/android
           mkdir -p www
           cp index.html www/
-          # 使用 --confirm 強制執行，避免互動式詢問卡住編譯
-          npx cap init BitFieldTool com.example.bitfield --web-dir www --confirm
+          
+          # 2. 建立 Capacitor 設定檔 (避免互動式詢問)
+          echo '{"appId": "com.bitfield.tool", "appName": "BitFieldTool", "webDir": "www", "bundledWebRuntime": false}' > capacitor.config.json
+          
+          # 3. 新增 Android 平台
           npx cap add android
 
       - name: Set Execution Permission for Gradlew
@@ -31,8 +41,7 @@ jobs:
           ./gradlew assembleDebug
 
       - name: Upload APK Artifact
-        uses: actions/upload-artifact@v4 # 核心修正：必須使用 v4
+        uses: actions/upload-artifact@v4
         with:
           name: BitField-Tool-APK
           path: android/app/build/outputs/apk/debug/app-debug.apk
-          overwrite: true # 確保重複編譯時會覆蓋舊檔
