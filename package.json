@@ -1,0 +1,11 @@
+{
+  "name": "bit-field-tool",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "mkdir -p www && cp index.html www/"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^5.0.0",
+    "@capacitor/android": "^5.0.0"
+  }
+}
